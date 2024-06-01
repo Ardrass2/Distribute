@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Доска студента{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Ученик - {{current_user.username}}</h2>
+<h3>Задания</h3>
+<ul class="list-group mb-4">
+    {% for assignment in assignments %}
+        <li class="list-group-item">
+            <div class="latex">{{ assignment.content|safe }}</div>
+            Сдать до: {{ assignment.deadline.strftime('%d-%m-%Y') }}
+            {% set attempts = student_answers[assignment.id]|length %}
+            {% set late_submission = now > assignment.deadline %}
+            {% if attempts >= assignment.max_attempts or student_answers[assignment.id]|selectattr('is_correct')|list %}
+                <p class="mt-2">Вы достигли максимального количество попыток сдачи.</p>
+                {% for answer in student_answers[assignment.id] %}
+                    <p>{{ answer.content }} - {% if answer.is_correct %}Верно{% else %}Неверно{% endif %}</p>
+                {% endfor %}
+            {% else %}
+                <form method="POST" action="{{ url_for('submit_answer', assignment_id=assignment.id) }}" class="mt-2">
+                    <div class="form-group">
+                        <textarea name="content" class="form-control" placeholder="Ваш ответ" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Подтвердить ответ</button>
+                </form>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('logout') }}" class="btn btn-link mt-4">Выйти из аккаунта</a>
+{% endblock %}
